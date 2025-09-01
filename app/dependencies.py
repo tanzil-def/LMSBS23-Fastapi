@@ -4,7 +4,7 @@ from jose import jwt, JWTError
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.models.user import User
-from app.core.config import settings  # <-- FIXED import
+from app.core.config import settings  # ✅ Correct import
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 

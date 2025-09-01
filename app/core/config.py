@@ -6,11 +6,6 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
 
-    MOODLE_BASE_URL: str = ""
-    MOODLE_CLIENT_ID: str = ""
-    MOODLE_CLIENT_SECRET: str = ""
-    MOODLE_REDIRECT_URI: str = ""
-
     ENV: str = "development"
     DEBUG: bool = True
     LOG_LEVEL: str = "INFO"
@@ -19,5 +14,4 @@ class Settings(BaseSettings):
         env_file = ".env"
         env_file_encoding = "utf-8"
 
-# Single instance
 settings = Settings()
