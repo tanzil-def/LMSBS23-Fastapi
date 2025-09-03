@@ -4,8 +4,14 @@ from typing import List
 from app.db.session import get_db
 from app.schemas.book import BookResponse, BookCreate, BookUpdate
 from app.crud import book as crud_book
+from app.dependencies import get_current_user, require_admin
+from app.models.user import User
 
 router = APIRouter(tags=["Books"])
+
+# ------------------------------
+# Public Endpoints
+# ------------------------------
 
 @router.get("/list", response_model=List[BookResponse])
 def list_books(db: Session = Depends(get_db)):
@@ -17,24 +23,6 @@ def check_availability(id: int, db: Session = Depends(get_db)):
     if available is None:
         raise HTTPException(status_code=404, detail="Book not found")
     return {"book_id": id, "is_available": available}
-
-@router.post("/create", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
-def create_book_endpoint(request: BookCreate, db: Session = Depends(get_db)):
-    return crud_book.create_book(db, request)
-
-@router.put("/edit/{id}", response_model=BookResponse)
-def edit_book(id: int, request: BookUpdate, db: Session = Depends(get_db)):
-    book = crud_book.update_book(db, id, request)
-    if not book:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return book
-
-@router.delete("/delete/{id}")
-def delete_book_endpoint(id: int, db: Session = Depends(get_db)):
-    result = crud_book.delete_book(db, id)
-    if not result:
-        raise HTTPException(status_code=404, detail="Book not found")
-    return result
 
 @router.get("/category/{categoryId}", response_model=List[BookResponse])
 def filter_by_category(categoryId: int, db: Session = Depends(get_db)):
@@ -51,3 +39,38 @@ def popular_books(db: Session = Depends(get_db)):
 @router.get("/new-collection", response_model=List[BookResponse])
 def new_collection(db: Session = Depends(get_db)):
     return crud_book.get_new_collection(db)
+
+# ------------------------------
+# Admin-only Endpoints
+# ------------------------------
+
+@router.post("/create", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
+def create_book_endpoint(
+    request: BookCreate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(require_admin)  # Only admin can create
+):
+    return crud_book.create_book(db, request)
+
+@router.put("/edit/{id}", response_model=BookResponse)
+def edit_book(
+    id: int, 
+    request: BookUpdate, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(require_admin)  # Only admin can edit
+):
+    book = crud_book.update_book(db, id, request)
+    if not book:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return book
+
+@router.delete("/delete/{id}")
+def delete_book_endpoint(
+    id: int, 
+    db: Session = Depends(get_db), 
+    user: User = Depends(require_admin)  # Only admin can delete
+):
+    result = crud_book.delete_book(db, id)
+    if not result:
+        raise HTTPException(status_code=404, detail="Book not found")
+    return {"detail": "Book deleted successfully"}

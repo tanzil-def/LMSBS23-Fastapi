@@ -1,4 +1,3 @@
-# app/routers/bookings.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from datetime import date
@@ -6,46 +5,31 @@ from typing import List
 from app.db.database import get_db
 from app.schemas.booking import BookingCreate, BookingResponse, BookingUpdate, BookingStatus
 from app.crud import booking as crud_booking
+from app.dependencies import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/booking", tags=["Bookings"])
 
+# Create Booking (auto user_id from token)
 @router.post("/create", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
-def create_booking(request: BookingCreate, db: Session = Depends(get_db)):
-    return crud_booking.create_booking(db, request)
+def create_booking(request: BookingCreate, db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return crud_booking.create_booking(db, request, user_id=current_user.id)
 
-@router.get("/{id}", response_model=BookingResponse)
-def get_booking(id: int, db: Session = Depends(get_db)):
-    booking = crud_booking.get_booking(db, id)
-    if not booking:
-        raise HTTPException(status_code=404, detail="Booking not found")
-    return booking
+# Get My Bookings
+@router.get("/user/me", response_model=List[BookingResponse])
+def get_my_bookings(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
+    return crud_booking.get_bookings_by_user(db, user_id=current_user.id)
 
-@router.get("/user/{user_id}", response_model=List[BookingResponse])
-def get_user_bookings(user_id: int, db: Session = Depends(get_db)):
-    return crud_booking.get_bookings_by_user(db, user_id)
-
-@router.get("/book/{book_id}", response_model=List[BookingResponse])
-def get_book_bookings(book_id: int, db: Session = Depends(get_db)):
-    return crud_booking.get_bookings_by_book(db, book_id)
-
-@router.get("/status/{status}", response_model=List[BookingResponse])
-def get_bookings_by_status(status: BookingStatus, db: Session = Depends(get_db)):
-    return crud_booking.get_bookings_by_status(db, status)
-
-@router.get("/expired", response_model=List[BookingResponse])
-def get_expired_bookings(db: Session = Depends(get_db)):
-    today = date.today()
-    return crud_booking.get_expired_bookings(db, today)
-
+# Admin-only Update
 @router.put("/update/{id}", response_model=BookingResponse)
-def update_booking(id: int, request: BookingUpdate, db: Session = Depends(get_db)):
+def update_booking(id: int, request: BookingUpdate, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     booking = crud_booking.update_booking(db, id, request)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")
     return booking
 
+# Admin-only Delete
 @router.delete("/delete/{id}", response_model=BookingResponse)
-def delete_booking(id: int, db: Session = Depends(get_db)):
+def delete_booking(id: int, db: Session = Depends(get_db), current_user=Depends(require_admin)):
     booking = crud_booking.delete_booking(db, id)
     if not booking:
         raise HTTPException(status_code=404, detail="Booking not found")

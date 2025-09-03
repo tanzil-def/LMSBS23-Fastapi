@@ -1,25 +1,26 @@
 from fastapi import FastAPI
+from fastapi.openapi.utils import get_openapi
 from app.db.base import Base
 from app.db.session import engine
 
-# Routers import
+# Routers
 from app.routers.auth import router as auth_router
 from app.routers.users import router as users_router, dashboard_router
 from app.routers.books import router as books_router
 from app.routers.categories import router as categories_router
-from app.routers.borrow import router as borrow_router
 from app.routers.bookings import router as bookings_router
+from app.routers.borrow import router as borrow_router
 from app.routers.reviews import router as reviews_router
 from app.routers.donations import router as donations_router
 from app.routers.settings import router as settings_router
 from app.routers.notifications import router as notification_router
 
-# Create tables
+# Tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="📚 LMSBS-Fastapi")
 
-# Routers
+# Include Routers
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(users_router, prefix="/api/users")
 app.include_router(dashboard_router, prefix="/api/users/user-dashboard")
@@ -35,3 +36,32 @@ app.include_router(notification_router, prefix="/api/notifications")
 @app.get("/")
 def root():
     return {"message": "📚 LMSBS-Fastapi Backend is running!"}
+
+# ------------------------
+# Swagger JWT Security Fix
+# ------------------------
+def custom_openapi():
+    if app.openapi_schema:
+        return app.openapi_schema
+    openapi_schema = get_openapi(
+        title="📚 LMSBS-Fastapi",
+        version="1.0.0",
+        description="LMS API with JWT Bearer Auth",
+        routes=app.routes,
+    )
+    # Add JWT Security globally
+    openapi_schema["components"]["securitySchemes"] = {
+        "BearerAuth": {
+            "type": "http",
+            "scheme": "bearer",
+            "bearerFormat": "JWT",
+            "description": "Paste JWT token here with **Bearer** prefix"
+        }
+    }
+    for path in openapi_schema["paths"]:
+        for method in openapi_schema["paths"][path]:
+            openapi_schema["paths"][path][method]["security"] = [{"BearerAuth": []}]
+    app.openapi_schema = openapi_schema
+    return app.openapi_schema
+
+app.openapi = custom_openapi
