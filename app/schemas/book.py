@@ -1,60 +1,53 @@
+# app/schemas/book.py
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
 from datetime import datetime
 from enum import Enum
 
-# -------------------
 class BookFormatEnum(str, Enum):
     HARD_COPY = "HARD_COPY"
     E_BOOK = "E_BOOK"
     AUDIO_BOOK = "AUDIO_BOOK"
 
-# ------------------- Base schema (common fields)
+# ---------------- Base (common fields)
 class BookBase(BaseModel):
-    name: str
+    title: str
     author: str
-    category_id: int
+    category_id: Optional[int] = None
     format: BookFormatEnum
-    total_copies: int = 1
-    available_copies: int = 1
-    short_details: Optional[str] = None
-    about: Optional[str] = None
-    isbn: Optional[str] = None
-    publication_year: Optional[int] = None
-    book_cover_url: Optional[HttpUrl] = None
-    pdf_file_url: Optional[HttpUrl] = None
-    audio_file_url: Optional[HttpUrl] = None
+    copies_total: int = 1
+    copies_available: int = 1
+    description: Optional[str] = None
+    cover: Optional[str] = None
+    pdf_file: Optional[str] = None
+    audio_file: Optional[str] = None
 
-# ------------------- Request DTOs
+# ---------------- Create (Request)
 class BookCreate(BookBase):
-    """Schema for creating a new book"""
     pass
 
+# ---------------- Update
 class BookUpdate(BaseModel):
-    """Schema for updating an existing book"""
-    name: Optional[str] = None
+    title: Optional[str] = None
     author: Optional[str] = None
     category_id: Optional[int] = None
     format: Optional[BookFormatEnum] = None
-    total_copies: Optional[int] = None
-    available_copies: Optional[int] = None
-    short_details: Optional[str] = None
-    about: Optional[str] = None
-    isbn: Optional[str] = None
-    publication_year: Optional[int] = None
-    book_cover_url: Optional[HttpUrl] = None
-    pdf_file_url: Optional[HttpUrl] = None
-    audio_file_url: Optional[HttpUrl] = None
+    copies_total: Optional[int] = None
+    copies_available: Optional[int] = None
+    description: Optional[str] = None
+    cover: Optional[str] = None
+    pdf_file: Optional[str] = None
+    audio_file: Optional[str] = None
 
-# ------------------- Response DTO
+# ---------------- Response (Full)
 class BookResponse(BookBase):
-    """Schema for reading book details (response)"""
     id: int
+    average_rating: float = 0
     created_at: datetime
     updated_at: datetime
 
     class Config:
         orm_mode = True
 
-# ------------------- Alias for backward compatibility
+# ---------------- Alias
 BookRead = BookResponse

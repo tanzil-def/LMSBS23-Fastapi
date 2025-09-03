@@ -2,25 +2,48 @@ from fastapi import APIRouter, Depends, Query, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from typing import List, Dict
-
 from app.db.session import get_db
-from app.dependencies import get_current_user
-from app.models.user import User  # Assuming User model exists
-from app.models.borrow import Borrow
+from app.models.user import User
+from app.models.borrow import Borrow, BorrowStatus
 from app.schemas.user import UserResponse
+from app.dependencies import get_current_user
 
-# -----------------------------
-# Admin / User Management Router
-# -----------------------------
+# ✅ User Management router
 router = APIRouter(
-    prefix="",
+    prefix="/api/users",
     tags=["User Management"]
 )
 
+# -----------------------------
+# Public / Admin User Routes
+# -----------------------------
+# Fix: Routes without {id} should come before {id} to prevent collision
+
+@router.get("/with-overdue", response_model=List[UserResponse])
+def get_users_with_overdue(db: Session = Depends(get_db)):
+    subquery = db.query(Borrow.user_id).filter(
+        Borrow.return_date < func.now(),
+        Borrow.status != BorrowStatus.RETURNED
+    ).distinct()
+    return db.query(User).filter(User.id.in_(subquery)).all()
+
+@router.get("/active-borrowers", response_model=List[UserResponse])
+def get_active_borrowers(db: Session = Depends(get_db)):
+    subquery = db.query(Borrow.user_id).filter(Borrow.status == BorrowStatus.ACTIVE).distinct()
+    return db.query(User).filter(User.id.in_(subquery)).all()
+
+@router.get("/search", response_model=List[UserResponse])
+def search_users(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    return db.query(User).filter(User.name.ilike(f"%{q}%")).all()
+
+# Get all users
 @router.get("/", response_model=List[UserResponse])
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(User).all()
 
+# -----------------------------
+# Routes with {id}
+# -----------------------------
 @router.get("/{id}", response_model=UserResponse)
 def get_user_by_id(id: int, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.id == id).first()
@@ -31,11 +54,14 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
 @router.get("/{id}/statistics", response_model=Dict[str, int])
 def get_user_statistics(id: int, db: Session = Depends(get_db)):
     total_borrowed = db.query(Borrow).filter(Borrow.user_id == id).count()
-    total_returned = db.query(Borrow).filter(Borrow.user_id == id, Borrow.status == "returned").count()
+    total_returned = db.query(Borrow).filter(
+        Borrow.user_id == id,
+        Borrow.status == BorrowStatus.RETURNED
+    ).count()
     total_overdue = db.query(Borrow).filter(
         Borrow.user_id == id,
         Borrow.return_date < func.now(),
-        Borrow.status != "returned"
+        Borrow.status != BorrowStatus.RETURNED
     ).count()
     return {
         "total_borrowed_books": total_borrowed,
@@ -43,26 +69,8 @@ def get_user_statistics(id: int, db: Session = Depends(get_db)):
         "total_overdue_books": total_overdue
     }
 
-@router.get("/with-overdue", response_model=List[UserResponse])
-def get_users_with_overdue(db: Session = Depends(get_db)):
-    subquery = db.query(Borrow.user_id).filter(
-        Borrow.return_date < func.now(),
-        Borrow.status != "returned"
-    ).distinct()
-    return db.query(User).filter(User.id.in_(subquery)).all()
-
-@router.get("/search", response_model=List[UserResponse])
-def search_users(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
-    return db.query(User).filter(User.name.ilike(f"%{q}%")).all()
-
-@router.get("/active-borrowers", response_model=List[UserResponse])
-def get_active_borrowers(db: Session = Depends(get_db)):
-    subquery = db.query(Borrow.user_id).filter(Borrow.status == "borrowed").distinct()
-    return db.query(User).filter(User.id.in_(subquery)).all()
-
-
 # -----------------------------
-# User Dashboard Router
+# User Dashboard Routes
 # -----------------------------
 dashboard_router = APIRouter(
     prefix="/user-dashboard",
@@ -77,11 +85,14 @@ def get_current_user_info(current_user=Depends(get_current_user)):
 def statistics(db: Session = Depends(get_db), current_user=Depends(get_current_user)):
     user_id = current_user.id
     total_borrowed_books = db.query(Borrow).filter(Borrow.user_id == user_id).count()
-    total_returned_books = db.query(Borrow).filter(Borrow.user_id == user_id, Borrow.status == "returned").count()
+    total_returned_books = db.query(Borrow).filter(
+        Borrow.user_id == user_id,
+        Borrow.status == BorrowStatus.RETURNED
+    ).count()
     total_overdue_books = db.query(Borrow).filter(
         Borrow.user_id == user_id,
         Borrow.return_date < func.now(),
-        Borrow.status != "returned"
+        Borrow.status != BorrowStatus.RETURNED
     ).count()
     return {
         "total_borrowed_books": total_borrowed_books,
@@ -97,7 +108,7 @@ def borrowed_books(
     current_user=Depends(get_current_user)
 ):
     user_id = current_user.id
-    query = db.query(Borrow).filter(Borrow.user_id == user_id, Borrow.status == "borrowed")
+    query = db.query(Borrow).filter(Borrow.user_id == user_id, Borrow.status == BorrowStatus.ACTIVE)
     total = query.count()
     results = query.offset((page - 1) * page_size).limit(page_size).all()
     return {

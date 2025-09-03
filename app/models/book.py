@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Text, Enum, ForeignKey, DateTime
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -13,23 +13,22 @@ class Book(Base):
     __tablename__ = "books"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(255), nullable=False)  # must exist in DB
-    short_details = Column(String(255), nullable=True)
-    author = Column(String(120), nullable=False)
-    about = Column(Text, nullable=True)
-    category_id = Column(Integer, ForeignKey("categories.id"), nullable=False)
+    title = Column(String(200), nullable=False)
+    author = Column(String(100), nullable=False)
+    description = Column(String(500), nullable=True)
+
+    cover = Column(String(255), nullable=True)
+    pdf_file = Column(String(255), nullable=True)
+    audio_file = Column(String(255), nullable=True)
+
+    copies_total = Column(Integer, nullable=True)
+    copies_available = Column(Integer, nullable=True)
+
+    category_id = Column(Integer, ForeignKey("categories.id"), nullable=True)
     category = relationship("Category", back_populates="books")
 
+    average_rating = Column(Float, default=0)
     format = Column(Enum(BookFormatEnum), nullable=False)
-    total_copies = Column(Integer, nullable=False, default=1)
-    available_copies = Column(Integer, nullable=False, default=1)
-
-    isbn = Column(String(50), unique=True, nullable=True)
-    publication_year = Column(Integer, nullable=True)
-
-    book_cover_url = Column(String(255), nullable=True)
-    pdf_file_url = Column(String(255), nullable=True)
-    audio_file_url = Column(String(255), nullable=True)
 
     borrows = relationship("Borrow", back_populates="book", cascade="all, delete-orphan")
     bookings = relationship("Booking", back_populates="book", cascade="all, delete-orphan")

@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy import Column, Integer, String, Enum, Boolean, DateTime, func
 from sqlalchemy.orm import relationship
 from app.db.base import Base
 import enum
@@ -16,8 +16,10 @@ class User(Base):
     email = Column(String(255), unique=True, nullable=False)
     password = Column(String(255), nullable=False)
     role = Column(Enum(UserRoleEnum), nullable=False, default=UserRoleEnum.USER)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, server_default=func.now(), onupdate=func.now())
 
-    # Optional relationships
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     borrows = relationship("Borrow", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")

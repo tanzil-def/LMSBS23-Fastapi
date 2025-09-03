@@ -1,8 +1,6 @@
-# app/routers/books.py
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
-
 from app.db.session import get_db
 from app.schemas.book import BookResponse, BookCreate, BookUpdate
 from app.crud import book as crud_book
@@ -21,12 +19,7 @@ def check_availability(id: int, db: Session = Depends(get_db)):
     return {"book_id": id, "is_available": available}
 
 @router.post("/create", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
-def create_book(request: BookCreate, db: Session = Depends(get_db)):
-    return crud_book.create_book(db, request)
-
-@router.post("/create/with-links", response_model=BookResponse, status_code=status.HTTP_201_CREATED)
-def create_book_with_links(request: BookCreate, db: Session = Depends(get_db)):
-    # Later extend korar jonne placeholder
+def create_book_endpoint(request: BookCreate, db: Session = Depends(get_db)):
     return crud_book.create_book(db, request)
 
 @router.put("/edit/{id}", response_model=BookResponse)
@@ -36,12 +29,12 @@ def edit_book(id: int, request: BookUpdate, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Book not found")
     return book
 
-@router.delete("/delete/{id}", response_model=BookResponse)
-def delete_book(id: int, db: Session = Depends(get_db)):
-    book = crud_book.delete_book(db, id)
-    if not book:
+@router.delete("/delete/{id}")
+def delete_book_endpoint(id: int, db: Session = Depends(get_db)):
+    result = crud_book.delete_book(db, id)
+    if not result:
         raise HTTPException(status_code=404, detail="Book not found")
-    return book
+    return result
 
 @router.get("/category/{categoryId}", response_model=List[BookResponse])
 def filter_by_category(categoryId: int, db: Session = Depends(get_db)):
