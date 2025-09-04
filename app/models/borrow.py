@@ -1,5 +1,4 @@
-# models/borrow.py
-from sqlalchemy import Column, Integer, String, ForeignKey, Date, DateTime, Enum
+from sqlalchemy import Column, Integer, ForeignKey, Date, DateTime, Enum
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -28,7 +27,7 @@ class Borrow(Base):
     due_date = Column(Date, nullable=False)
     return_date = Column(Date, nullable=True)
     
-    status = Column(Enum(BorrowStatus), nullable=False)
+    status = Column(Enum(BorrowStatus), nullable=False)  # ✅ Use correct Enum
     extension_count = Column(Integer, default=0)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

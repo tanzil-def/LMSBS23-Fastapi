@@ -1,5 +1,4 @@
-# models/booking.py
-from sqlalchemy import Column, Integer, String, ForeignKey, Enum, Date, DateTime
+from sqlalchemy import Column, Integer, ForeignKey, Enum, Date, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from app.db.base import Base
@@ -15,27 +14,20 @@ class Booking(Base):
     __tablename__ = "bookings"
 
     id = Column(Integer, primary_key=True, index=True)
-    
+
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     user = relationship("User", back_populates="bookings")
-    
+
     book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
     book = relationship("Book", back_populates="bookings")
-    
-    booking_date = Column(Date, nullable=False)
+
+    # auto booking_date
+    booking_date = Column(Date, nullable=False, server_default=func.curdate())
+
     expected_available_date = Column(Date, nullable=False)
-    
-    status = Column(Enum(BookingStatusEnum), nullable=False)
-    
+
+    # default status
+    status = Column(Enum(BookingStatusEnum), nullable=False, server_default="PENDING")
+
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
-
-# models/user.py এ relationship যোগ করতে হবে
-# class User(Base):
-#     ...
-#     bookings = relationship("Booking", back_populates="user")
-
-# models/book.py এ relationship যোগ করতে হবে
-# class Book(Base):
-#     ...
-#     bookings = relationship("Booking", back_populates="book")
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

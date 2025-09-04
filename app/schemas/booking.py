@@ -5,11 +5,12 @@ from enum import Enum
 from app.schemas.user import UserResponse
 from app.schemas.book import BookRead
 
+# Match with DB Enum (IMPORTANT)
 class BookingStatus(str, Enum):
     PENDING = "PENDING"
-    CONFIRMED = "CONFIRMED"
+    FULFILLED = "FULFILLED"
     CANCELLED = "CANCELLED"
-    COMPLETED = "COMPLETED"
+    EXPIRED = "EXPIRED"
 
 class BookingCreate(BaseModel):
     book_id: int
@@ -23,13 +24,13 @@ class BookingRead(BaseModel):
     id: int
     user: UserResponse
     book: BookRead
-    booking_date: date
+    booking_date: Optional[date] = None
     expected_available_date: Optional[date] = None
-    status: BookingStatus
+    status: Optional[BookingStatus] = None
     days_until_available: Optional[int] = None
-    can_be_cancelled: bool
+    can_be_cancelled: Optional[bool] = None   # keep optional, will calculate in service layer
     created_at: datetime
-    updated_at: datetime
+    updated_at: Optional[datetime] = None
 
     class Config:
         orm_mode = True
