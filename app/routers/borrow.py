@@ -5,7 +5,11 @@ from app.db.database import get_db
 from app.crud import borrow as borrow_crud
 from app.schemas import borrow as borrow_schema
 
-router = APIRouter(prefix="/api/borrow", tags=["Borrow & Return"])
+router = APIRouter(tags=["Borrow & Return"])
+
+# ==========================
+# Borrow Management (User)
+# ==========================
 
 @router.post("/create", response_model=borrow_schema.BorrowResponse)
 def create_borrow(request: borrow_schema.BorrowCreate, db: Session = Depends(get_db)):
@@ -33,14 +37,73 @@ def extend_due_date(
         raise HTTPException(status_code=400, detail="Cannot extend due date")
     return borrow
 
+# ==========================
+# Borrow Info (User/Admin)
+# ==========================
+
 @router.get("/user/{user_id}", response_model=List[borrow_schema.BorrowResponse])
 def get_user_borrows(user_id: int = Path(...), db: Session = Depends(get_db)):
     return borrow_crud.get_user_borrows(db, user_id)
+
+@router.get("/user/{user_id}/history", response_model=List[borrow_schema.BorrowResponse])
+def get_user_borrow_history(user_id: int = Path(...), db: Session = Depends(get_db)):
+    return borrow_crud.get_user_borrow_history(db, user_id)
+
+@router.get("/list", response_model=List[borrow_schema.BorrowResponse])
+def get_all_borrows(db: Session = Depends(get_db)):
+    return borrow_crud.get_all_borrows(db)
+
+@router.get("/active", response_model=List[borrow_schema.BorrowResponse])
+def get_active_borrows(db: Session = Depends(get_db)):
+    return borrow_crud.get_active_borrows(db)
+
+@router.get("/retrieve/{id}", response_model=borrow_schema.BorrowResponse)
+def retrieve_borrow(id: int = Path(...), db: Session = Depends(get_db)):
+    borrow = borrow_crud.get_borrow_by_id(db, id)
+    if not borrow:
+        raise HTTPException(status_code=404, detail="Borrow not found")
+    return borrow
 
 @router.get("/overdue", response_model=List[borrow_schema.BorrowResponse])
 def get_overdue_borrows(db: Session = Depends(get_db)):
     return borrow_crud.get_overdue_borrows(db)
 
-@router.get("/stats")
+# ==========================
+# Borrow Request Management (Admin)
+# ==========================
+
+@router.put("/reject", response_model=borrow_schema.BorrowResponse)
+def reject_borrow_request(user_id: int = Query(...), book_id: int = Query(...), db: Session = Depends(get_db)):
+    borrow = borrow_crud.reject_borrow(db, user_id, book_id)
+    if not borrow:
+        raise HTTPException(status_code=400, detail="Cannot reject borrow request")
+    return borrow
+
+@router.put("/pending", response_model=borrow_schema.BorrowResponse)
+def mark_borrow_pending(user_id: int = Query(...), book_id: int = Query(...), db: Session = Depends(get_db)):
+    borrow = borrow_crud.mark_pending(db, user_id, book_id)
+    if not borrow:
+        raise HTTPException(status_code=400, detail="Cannot mark borrow as pending")
+    return borrow
+
+@router.put("/activate", response_model=borrow_schema.BorrowResponse)
+def activate_borrow_request(user_id: int = Query(...), book_id: int = Query(...), db: Session = Depends(get_db)):
+    borrow = borrow_crud.activate_borrow(db, user_id, book_id)
+    if not borrow:
+        raise HTTPException(status_code=400, detail="Cannot activate borrow request")
+    return borrow
+
+@router.put("/accept", response_model=borrow_schema.BorrowResponse)
+def accept_borrow_request(user_id: int = Query(...), book_id: int = Query(...), db: Session = Depends(get_db)):
+    borrow = borrow_crud.accept_borrow(db, user_id, book_id)
+    if not borrow:
+        raise HTTPException(status_code=400, detail="Cannot accept borrow request")
+    return borrow
+
+# ==========================
+# Borrow Statistics (Admin)
+# ==========================
+
+@router.get("/stats", response_model=borrow_schema.BorrowStatsResponse)
 def get_borrow_stats(db: Session = Depends(get_db)):
     return borrow_crud.get_borrow_stats(db)

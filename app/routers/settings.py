@@ -11,7 +11,7 @@ from app.schemas.settings import (
 from app.crud import settings as crud_settings
 
 # Router with clean prefix handled in main.py
-router = APIRouter(tags=["Admin Settings"])
+router = APIRouter(tags=["Admin Settings⚙️"])
 
 # ✅ 1️⃣ Get current admin settings
 @router.get("/", response_model=AdminSettingsResponse)

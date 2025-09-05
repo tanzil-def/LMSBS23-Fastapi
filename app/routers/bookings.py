@@ -7,7 +7,7 @@ from app.schemas.booking import BookingCreate, BookingResponse, BookingUpdate, B
 from app.crud import booking as crud_booking
 from app.dependencies import get_current_user, require_admin
 
-router = APIRouter(prefix="/api/booking", tags=["Bookings"])
+router = APIRouter(tags=["Bookings"])
 
 # Create Booking (auto user_id from token)
 @router.post("/create", response_model=BookingResponse, status_code=status.HTTP_201_CREATED)
