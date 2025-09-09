@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from app.db.base import Base
 from app.db.session import engine
@@ -15,25 +16,45 @@ from app.routers.donations import router as donations_router
 from app.routers.settings import router as settings_router
 from app.routers.notifications import router as notification_router
 
+# Create all tables
 Base.metadata.create_all(bind=engine)
+
+# FastAPI app instance
 app = FastAPI(title="📚 LMSBS-Fastapi")
 
+# ===== CORS Middleware =====
+origins = [
+    "http://localhost:3000",  # React dev server
+    "http://localhost:5173",  # Vite dev server
+]
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,           # allow requests only from these origins
+    allow_credentials=True,
+    allow_methods=["*"],             # allow all HTTP methods (GET, POST, etc.)
+    allow_headers=["*"],             # allow all headers
+)
+
+# ===== Include Routers =====
 app.include_router(auth_router, prefix="/api/auth")
 app.include_router(users_router)
 app.include_router(dashboard_router)
 app.include_router(books_router, prefix="/api/book")
 app.include_router(categories_router, prefix="/api/categories")
 app.include_router(bookings_router, prefix="/api/bookings")
-app.include_router(borrow_router, prefix="/api/borrow")  # Clean integration, no duplicate
+app.include_router(borrow_router, prefix="/api/borrow")
 app.include_router(reviews_router, prefix="/api/reviews")
 app.include_router(donations_router, prefix="/api/donations")
 app.include_router(settings_router, prefix="/api/admin-settings")
 app.include_router(notification_router, prefix="/api/notifications")
 
+# Root endpoint
 @app.get("/")
 def root():
     return {"message": "📚 LMSBS-Fastapi Backend is running!"}
 
+# Custom OpenAPI with JWT security
 def custom_openapi():
     if app.openapi_schema:
         return app.openapi_schema
