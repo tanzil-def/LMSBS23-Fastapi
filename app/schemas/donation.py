@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel
 from typing import Optional
 from datetime import datetime
 from enum import Enum
@@ -17,7 +17,6 @@ class UserResponse(BaseModel):
     class Config:
         orm_mode = True
 
-# Request Schemas
 class DonationCreate(BaseModel):
     user_id: int
     book_title: str
@@ -32,10 +31,9 @@ class DonationUpdate(BaseModel):
     notes: Optional[str] = None
 
 class DonationStatusUpdate(BaseModel):
-    status: str
+    status: DonationStatusEnum
     admin_notes: Optional[str] = None
 
-# Response Schema
 class DonationResponse(BaseModel):
     id: int
     user: UserResponse

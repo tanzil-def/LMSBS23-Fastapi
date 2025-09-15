@@ -16,9 +16,36 @@ router = APIRouter(
     tags=["User Management👥"]
 )
 
+# -----------------------------
+# STATIC routes first (fixed)
+# -----------------------------
+@router.get("/with-overdue", response_model=List[UserResponse], summary="Get users with overdue books")
+def get_users_with_overdue(db: Session = Depends(get_db)):
+    subquery = db.query(Borrow.user_id).filter(
+        Borrow.return_date < func.now(),
+        Borrow.status != BorrowStatus.RETURNED
+    ).distinct()
+    return db.query(User).filter(User.id.in_(subquery)).all()
+
+
+@router.get("/search", response_model=List[UserResponse], summary="Search users")
+def search_users(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
+    return db.query(User).filter(User.name.ilike(f"%{q}%")).all()
+
+
+@router.get("/active-borrowers", response_model=List[UserResponse], summary="Get active borrowers")
+def get_active_borrowers(db: Session = Depends(get_db)):
+    subquery = db.query(Borrow.user_id).filter(Borrow.status == BorrowStatus.ACTIVE).distinct()
+    return db.query(User).filter(User.id.in_(subquery)).all()
+
+
+# -----------------------------
+# Remaining routes
+# -----------------------------
 @router.get("/", response_model=List[UserResponse], summary="Get all users")
 def get_all_users(db: Session = Depends(get_db)):
     return db.query(User).all()
+
 
 @router.get("/{id}", response_model=UserResponse, summary="Get user by ID")
 def get_user_by_id(id: int, db: Session = Depends(get_db)):
@@ -26,6 +53,7 @@ def get_user_by_id(id: int, db: Session = Depends(get_db)):
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     return user
+
 
 @router.get("/{id}/statistics", response_model=Dict[str, int], summary="Get user statistics")
 def get_user_statistics(id: int, db: Session = Depends(get_db)):
@@ -45,22 +73,6 @@ def get_user_statistics(id: int, db: Session = Depends(get_db)):
         "total_overdue_books": total_overdue
     }
 
-@router.get("/with-overdue", response_model=List[UserResponse], summary="Get users with overdue books")
-def get_users_with_overdue(db: Session = Depends(get_db)):
-    subquery = db.query(Borrow.user_id).filter(
-        Borrow.return_date < func.now(),
-        Borrow.status != BorrowStatus.RETURNED
-    ).distinct()
-    return db.query(User).filter(User.id.in_(subquery)).all()
-
-@router.get("/search", response_model=List[UserResponse], summary="Search users")
-def search_users(q: str = Query(..., min_length=1), db: Session = Depends(get_db)):
-    return db.query(User).filter(User.name.ilike(f"%{q}%")).all()
-
-@router.get("/active-borrowers", response_model=List[UserResponse], summary="Get active borrowers")
-def get_active_borrowers(db: Session = Depends(get_db)):
-    subquery = db.query(Borrow.user_id).filter(Borrow.status == BorrowStatus.ACTIVE).distinct()
-    return db.query(User).filter(User.id.in_(subquery)).all()
 
 # -----------------------------
 # Dashboard router (separate prefix)
@@ -113,4 +125,3 @@ def borrowed_books(
             "total_pages": (total + page_size - 1) // page_size
         }
     }
-

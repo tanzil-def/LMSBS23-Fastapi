@@ -23,3 +23,4 @@ class User(Base):
     bookings = relationship("Booking", back_populates="user", cascade="all, delete-orphan")
     borrows = relationship("Borrow", back_populates="user", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="user", cascade="all, delete-orphan")
+    donations = relationship("DonationRequest", back_populates="user", cascade="all, delete-orphan")

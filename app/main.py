@@ -12,7 +12,8 @@ from app.routers.categories import router as categories_router
 from app.routers.bookings import router as bookings_router
 from app.routers.borrow import router as borrow_router
 from app.routers.reviews import router as reviews_router
-from app.routers.donations import router as donations_router
+from app.routers.donations import router as donation_router 
+from app.routers.featured import router as featured_router
 from app.routers.settings import router as settings_router
 from app.routers.notifications import router as notification_router
 
@@ -30,10 +31,10 @@ origins = [
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,           # allow requests only from these origins
+    allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],             # allow all HTTP methods (GET, POST, etc.)
-    allow_headers=["*"],             # allow all headers
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 # ===== Include Routers =====
@@ -45,7 +46,8 @@ app.include_router(categories_router, prefix="/api/categories")
 app.include_router(bookings_router, prefix="/api/bookings")
 app.include_router(borrow_router, prefix="/api/borrow")
 app.include_router(reviews_router, prefix="/api/reviews")
-app.include_router(donations_router, prefix="/api/donations")
+app.include_router(donation_router, prefix="/api/donations") 
+app.include_router(featured_router)
 app.include_router(settings_router, prefix="/api/admin-settings")
 app.include_router(notification_router, prefix="/api/notifications")
 
@@ -64,7 +66,6 @@ def custom_openapi():
         description="LMS API with JWT Bearer Auth",
         routes=app.routes,
     )
-    # Add JWT Security globally
     openapi_schema["components"]["securitySchemes"] = {
         "BearerAuth": {
             "type": "http",
