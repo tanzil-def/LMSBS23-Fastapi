@@ -76,9 +76,8 @@ def get_user_statistics(id: int, db: Session = Depends(get_db)):
 
 # -----------------------------
 # Dashboard router (separate prefix)
-# -----------------------------
 dashboard_router = APIRouter(
-    prefix="/api/deshbord", 
+    prefix="/api/dashboard", 
     tags=["User Dashboard"]
 )
 

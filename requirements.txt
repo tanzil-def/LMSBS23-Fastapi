@@ -20,3 +20,5 @@ python-jose==3.3.0
 
 # Email validation
 email-validator==2.2.0
+requests>=2.31.0
+

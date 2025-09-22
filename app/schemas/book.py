@@ -13,7 +13,7 @@ class BookFormatEnum(str, Enum):
 class BookBase(BaseModel):
     title: str
     author: str
-    category_id: Optional[int] = None
+    category_id:  Optional[int] = 1
     format: BookFormatEnum
     copies_total: int = 1
     copies_available: int = 1
@@ -30,7 +30,7 @@ class BookCreate(BookBase):
 class BookUpdate(BaseModel):
     title: Optional[str] = None
     author: Optional[str] = None
-    category_id: Optional[int] = None
+    category_id:  Optional[int] = 1
     format: Optional[BookFormatEnum] = None
     copies_total: Optional[int] = None
     copies_available: Optional[int] = None
