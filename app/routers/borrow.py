@@ -6,14 +6,14 @@ from typing import List, Optional
 from app.db.database import get_db
 from app.crud import borrow as borrow_crud
 from app.schemas import borrow as borrow_schema
-from .auth import get_current_user, get_admin_user  # relative import from routers/
+from .auth import get_current_user, get_admin_user
 
 from app.models.user import User
 
 router = APIRouter(tags=["Borrow & Return"])
 
 # ==========================
-# Borrow Management (User)
+# Borrow Management (User/Admin)
 # ==========================
 
 @router.post("/create", response_model=borrow_schema.BorrowResponse)
@@ -22,6 +22,10 @@ def create_borrow(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
+    # Flexible: Only block guests or unauthorized users
+    if current_user.role not in ["USER", "ADMIN"]:
+        raise HTTPException(status_code=403, detail="Not allowed to borrow")
+
     borrow = borrow_crud.create_borrow(db, request, current_user.id)
     if not borrow:
         raise HTTPException(status_code=400, detail="Book not available or already borrowed")
@@ -118,4 +122,3 @@ def get_borrow_stats(
     current_user: User = Depends(get_admin_user)  
 ):
     return borrow_crud.get_borrow_stats(db)
-

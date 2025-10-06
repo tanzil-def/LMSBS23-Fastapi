@@ -9,7 +9,7 @@ class FeaturedBookBase(BaseModel):
 
 # ------------------ Schema for Create ------------------
 class FeaturedBookCreate(FeaturedBookBase):
-    pass  # শুধু book_id লাগে create করার সময়
+    pass  # 
 
 # ------------------ Schema for Update ------------------
 class FeaturedBookUpdate(BaseModel):

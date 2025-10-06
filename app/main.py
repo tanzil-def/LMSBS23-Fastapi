@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
+from fastapi.staticfiles import StaticFiles
 from app.db.base import Base
 from app.db.session import engine
 from dotenv import load_dotenv
@@ -31,7 +32,7 @@ app = FastAPI(title="📚 LMSBS-Fastapi")
 # ===== CORS Middleware =====
 origins = [
     "http://localhost:3000",  # React dev server
-    "http://localhost:5174",  # Vite dev server
+    "http://localhost:5173",  # Vite dev server
 ]
 app.add_middleware(
     CORSMiddleware,
@@ -54,6 +55,11 @@ app.include_router(donation_router, prefix="/api/donations")
 app.include_router(featured_router)
 app.include_router(settings_router, prefix="/api/admin-settings")
 app.include_router(notification_router, prefix="/api/notifications")
+
+# ===== Serve Media Files =====
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # project root
+MEDIA_DIR = os.path.join(BASE_DIR, "media")  # /home/tanzil/LMSBS-Fastapi/media
+app.mount("/media", StaticFiles(directory=MEDIA_DIR), name="media")
 
 # Root endpoint
 @app.get("/")

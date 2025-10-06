@@ -5,7 +5,7 @@ from app.crud import category as category_crud
 from app.schemas import category as category_schema
 from app.db.database import get_db
 
-router = APIRouter(prefix="/api/category", tags=["Category Management"])
+router = APIRouter(tags=["Category Management"])
 
 # ✅ Create Category
 @router.post("/create", response_model=category_schema.CategoryResponse, status_code=status.HTTP_201_CREATED)
