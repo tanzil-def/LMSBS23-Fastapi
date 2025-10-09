@@ -27,8 +27,8 @@ class Borrow(Base):
     due_date = Column(Date, nullable=False)
     return_date = Column(Date, nullable=True)
     
-    status = Column(Enum(BorrowStatus), nullable=False)  # ✅ Use correct Enum
+    status = Column(Enum(BorrowStatus, name="borrowstatus"), nullable=False)  # name added
     extension_count = Column(Integer, default=0)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)
+    updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)

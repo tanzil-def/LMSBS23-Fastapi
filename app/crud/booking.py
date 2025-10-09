@@ -1,9 +1,7 @@
-from sqlalchemy.orm import Session
-from datetime import date
-from typing import List, Optional
-
-from app.models.booking import Booking, BookingStatusEnum as BookingStatus
+from sqlalchemy.orm import Session, joinedload
+from app.models.booking import Booking
 from app.schemas.booking import BookingCreate, BookingUpdate
+from typing import List, Optional
 
 def create_booking(db: Session, booking_in: BookingCreate, user_id: int):
     db_booking = Booking(**booking_in.dict(exclude={"user_id"}), user_id=user_id)
@@ -13,22 +11,16 @@ def create_booking(db: Session, booking_in: BookingCreate, user_id: int):
     return db_booking
 
 def get_booking(db: Session, booking_id: int) -> Optional[Booking]:
-    return db.query(Booking).filter(Booking.id == booking_id).first()
+    return db.query(Booking)\
+             .options(joinedload(Booking.user), joinedload(Booking.book))\
+             .filter(Booking.id == booking_id)\
+             .first()
 
 def get_bookings_by_user(db: Session, user_id: int) -> List[Booking]:
-    return db.query(Booking).filter(Booking.user_id == user_id).all()
-
-def get_bookings_by_book(db: Session, book_id: int) -> List[Booking]:
-    return db.query(Booking).filter(Booking.book_id == book_id).all()
-
-def get_bookings_by_status(db: Session, status: BookingStatus) -> List[Booking]:
-    return db.query(Booking).filter(Booking.status == status).all()
-
-def get_expired_bookings(db: Session, today: date):
-    return db.query(Booking).filter(
-        Booking.status == BookingStatus.PENDING,
-        Booking.expected_available_date < today
-    ).all()
+    return db.query(Booking)\
+             .options(joinedload(Booking.book))\
+             .filter(Booking.user_id == user_id)\
+             .all()
 
 def update_booking(db: Session, booking_id: int, booking_in: BookingUpdate):
     booking = get_booking(db, booking_id)

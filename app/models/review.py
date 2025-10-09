@@ -11,7 +11,7 @@ class Review(Base):
     book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
     
     rating = Column(Integer, nullable=False)  # 1-5 stars
-    comment = Column(Text, nullable=True)
+    comment = Column(Text, nullable=True)     # Text ঠিক আছে, length লাগবে না
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now(), nullable=True)

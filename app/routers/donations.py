@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.crud import donation as donation_crud
@@ -46,8 +46,8 @@ def update_status(id: int, request: donation_schema.DonationStatusUpdate, db: Se
 
 @router.get("/pending", response_model=List[donation_schema.DonationResponse])
 def pending_donations(db: Session = Depends(get_db)):
-    return donation_crud.get_requests_by_status(db, donation_schema.DonationStatusEnum.PENDING)
+    return donation_crud.get_requests_by_status(db, donation_schema.DonationStatusEnum.pending)
 
 @router.get("/approved", response_model=List[donation_schema.DonationResponse])
 def approved_donations(db: Session = Depends(get_db)):
-    return donation_crud.get_requests_by_status(db, donation_schema.DonationStatusEnum.APPROVED)
+    return donation_crud.get_requests_by_status(db, donation_schema.DonationStatusEnum.accepted)

@@ -5,9 +5,10 @@ from app.crud import review as crud_review
 from app.schemas.review import ReviewCreateRequest, ReviewUpdateRequest, ReviewResponse
 from app.db.database import get_db
 
-router = APIRouter(prefix="/api/review", tags=["Review Management"])
+router = APIRouter(tags=["Review Management"])
 
-# Helper function: SQLAlchemy object থেকে Response dict বানাবে
+# Helper function
+
 def review_to_dict(review):
     return ReviewResponse(
         id=review.id,

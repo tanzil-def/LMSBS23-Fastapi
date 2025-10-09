@@ -21,13 +21,10 @@ class Booking(Base):
     book_id = Column(Integer, ForeignKey("books.id"), nullable=False)
     book = relationship("Book", back_populates="bookings")
 
-    # auto booking_date
     booking_date = Column(Date, nullable=False, server_default=func.curdate())
-
     expected_available_date = Column(Date, nullable=False)
 
-    # default status
-    status = Column(Enum(BookingStatusEnum), nullable=False, server_default="PENDING")
+    status = Column(Enum(BookingStatusEnum, name="bookingstatusenum"), nullable=False, server_default="PENDING")
 
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now())

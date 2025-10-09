@@ -4,15 +4,15 @@ from datetime import datetime
 from enum import Enum
 
 class DonationStatusEnum(str, Enum):
-    PENDING = "PENDING"
-    APPROVED = "APPROVED"
-    REJECTED = "REJECTED"
+    pending = "pending"
+    accepted = "accepted"
+    rejected = "rejected"
 
 class UserResponse(BaseModel):
     id: int
     username: str
     email: str
-    name: str
+    full_name: str  # ✅ Ensure this field is always returned
 
     class Config:
         orm_mode = True
